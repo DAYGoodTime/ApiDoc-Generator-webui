@@ -29,7 +29,7 @@
         </div>
       </template>
       <el-input
-          v-model="mh_summary"
+          v-model="store.mh_summary"
           class="w-50 m-2"
           placeholder="Type something"
       />
@@ -44,14 +44,15 @@
         </div>
       </template>
       <el-input
-          v-model="mh_description"
+          v-model="store.mh_description"
           class="w-50 m-2"
           placeholder="Type something"
       />
     </el-descriptions-item>
   </el-descriptions>
   <el-divider/>
-  <argument/>
+  <argument v-if="store.isSelected"/>
+
 
 </template>
 <script setup>
@@ -62,16 +63,14 @@ import {Document, Postcard} from "@element-plus/icons-vue";
 
 const store = MainStore()
 const size = ref('default')
-const mh_description = ref('')
-const mh_summary = ref('')
 const ReqBodyTagChange = (status) => {
   store.$patch({
-    RequestBody:status
+    RequestBody: status
   })
 }
 const RestFulTagChange = (status) => {
   store.$patch({
-    RestFul:status
+    RestFul: status
   })
 }
 const log = () => {

@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {ref} from "vue";
+import {reactive, ref, toRef} from "vue";
 
 const ArgObj = {
     'name': '',
@@ -10,21 +10,28 @@ const ArgObj = {
     'elementName': '',
     'isPath': false,
     'subType':'',
+    'isObject':false,
+    'isArray':false,
 }
 export const MainStore = defineStore('store', {
     state: () => ({
         methods: ref([]),
+        WebSocket:undefined,
         parameterList:ref([]),
         curSelectMethod: ref({}),
         mainTitle: '等待选择',
         RequestBody: ref(),
         RestFul: ref(),
-        ArgLength:ref(1),
-        ArgLength_body:ref(1),
-        Argument_body:ref([ArgObj]),
-        Argument_normal:ref([ArgObj]),
-    })
-        ,
+        ArgLength:ref(1),//普通参数的长度
+        ArgLength_body:ref(1),//请求体参数的长度
+        Argument_body:ref(Array(1).fill({}).map(() => Object.assign({}, ArgObj))),
+        Argument_normal:ref([]),
+        mh_summary:ref(''),
+        mh_description:ref(''),
+        Result:ref([]),
+        SchemaList:ref([]),
+        Selected:ref(false),
+    }),
     getters: {
         getMethods(state) {
             return state.methods;
@@ -51,6 +58,9 @@ export const MainStore = defineStore('store', {
         getArgLength(state){
             return state.ArgLength;
         },
+        isSelected(state){
+            return state.Selected;
+        },
     },
     actions: {
         getMethod(index){
@@ -73,40 +83,76 @@ export const MainStore = defineStore('store', {
             this.mainTitle = "接口参数";
             this.RequestBody = isReqBody;
             this.RestFul = isResFul;
-            //LoadArgModel
-            if (argList.length>this.Argument_normal.length){
-                for (let i = 0; i <= argList.length-this.Argument_normal.length; i++) {
-                    this.Argument_normal.push(ArgObj)
-                }
-            }else if(argList.length<this.Argument_normal.length){
-                for (let i = 0; i < this.Argument_normal.length-argList.length; i++) {
-                    this.Argument_normal.pop()
-                }
-            }
+            //Init ArgumentList
+            this.Argument_normal = Array(argList.length).fill({}).map(() => Object.assign({}, ArgObj))
             console.log(this.Argument_normal)
-
             return method;
-        },
-        isNotRequestBodyOrServlet(arg){
-            if(arg===undefined) return ;
-            let bool = true;
-            for (let i = 0; i < arg.AnnotationList.length; i++) {
-                if(arg.AnnotationList[i]==="RequestBody") bool = false;
-            }
-            if(arg.Type.includes("Servlet")) bool = false;
-            return bool;
         },
         handelChangeArg(newV,oldV){
             this.ArgLength_body = newV
             if (newV > oldV) {
                 for (let i = 0; i < newV - oldV; i++) {
-                    this.Argument_body.push(ArgObj);
+                    this.Argument_body.push(Object.assign({},ArgObj));
                 }
             } else {
                 for (let i = 0; i < oldV - newV; i++) {
                     this.Argument_body.pop();
                 }
             }
+        },
+        pushResult(obj){
+            this.Result.push(Object.assign({},obj))
+            return null;
+        },
+        changeSelected(bool){
+            this.Selected = bool;
+        },
+        ChangeType_body(val,index){
+            if(val==='Object'){
+                this.Argument_body[index].isObject = true;
+                this.Argument_body[index].isArray = false;
+            }else if(val==='Array') {
+                this.Argument_body[index].isArray = true;
+                this.Argument_body[index].isObject = false;
+            } else {
+                this.Argument_body[index].isObject = false;
+                this.Argument_body[index].isArray = false;
+            }
+        },
+        ChangeType_normal(val,index){
+            if(val==='Object'){
+                this.Argument_normal[index].isObject = true;
+                this.Argument_normal[index].isArray = false;
+            }else if(val==='Array') {
+                this.Argument_normal[index].isArray = true;
+                this.Argument_normal[index].isObject = false;
+            } else {
+                this.Argument_normal[index].isObject = false;
+                this.Argument_normal[index].isArray = false;
+            }
+        },
+        getArgumentWithOutBodyOrServlet(){
+            let res = this.parameterList.filter(item =>{
+                {
+                    if(item===undefined) return false;
+                    let bool = true;
+                    for (let i = 0; i < item.AnnotationList.length; i++) {
+                        if(item.AnnotationList[i]==="RequestBody") bool = false;
+                    }
+                    if(item.Type.includes("Servlet")) bool = false;
+                    return bool;
+                }
+            })
+            console.log(res)
+            return res;
+        },
+        isRestFulArgument(arg){
+            let bool = false;
+            if(!this.RestFul) return false;
+            arg.AnnotationList.forEach((item)=>{
+                if(item==="PathVariable") bool = true;
+            })
+            return bool;
         },
     }
 })

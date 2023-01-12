@@ -30,9 +30,11 @@ import { MainStore } from '../utils/Store'
 
 const store = MainStore()
 const selectArg = (index)=>{
+  store.changeSelected(false)
   store.$patch({
     curSelectMethod:store.getMethod(index),
   })
+  store.changeSelected(true)
 }
 
 
