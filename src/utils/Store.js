@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {reactive, ref, toRef} from "vue";
+import {ref} from "vue";
 
 const ArgObj = {
     'name': '',
@@ -9,28 +9,45 @@ const ArgObj = {
     'dataType': '',
     'elementName': '',
     'isPath': false,
-    'subType':'',
-    'isObject':false,
-    'isArray':false,
+    'subType': '',
+    'isObject': false,
+    'isArray': false,
+}
+const fieldTemplate = {
+    'name': '',
+    'description': '',
+    'isRequired': true,
+    'example': '',
+    'dataType': '',
+    'elementName': '',
+    'subType': '',
+    'isObject': false,
+    'isArray': false,
 }
 export const MainStore = defineStore('store', {
     state: () => ({
         methods: ref([]),
-        WebSocket:undefined,
-        parameterList:ref([]),
+        WebSocket: undefined,
+        parameterList: ref([]),
         curSelectMethod: ref({}),
+        curSelectModel: ref({}),
         mainTitle: '等待选择',
         RequestBody: ref(),
         RestFul: ref(),
-        ArgLength:ref(1),//普通参数的长度
-        ArgLength_body:ref(1),//请求体参数的长度
-        Argument_body:ref(Array(1).fill({}).map(() => Object.assign({}, ArgObj))),
-        Argument_normal:ref([]),
-        mh_summary:ref(''),
-        mh_description:ref(''),
-        Result:ref([]),
-        SchemaList:ref([]),
-        Selected:ref(false),
+        ArgLength: ref(1),//普通参数的长度
+        ArgLength_body: ref(1),//请求体参数的长度
+        Argument_body: ref(Array(1).fill({}).map(() => Object.assign({}, ArgObj))),
+        Argument_normal: ref([]),
+        mh_summary: ref(''),
+        mh_description: ref(''),
+        Result: ref([]),
+        SchemaList: ref([]),
+        ArgSelected: ref(false),
+        modelSelected: ref(false),
+        models: ref([]),
+        Result_models:ref([]),
+        FieldList:ref([]),
+        models_refList:ref([]),
     }),
     getters: {
         getMethods(state) {
@@ -45,25 +62,31 @@ export const MainStore = defineStore('store', {
         getMethodArgument(state) {
             return state.parameterList;
         },
-        isPathValue(){
-            return (arg) =>{
+        isPathValue() {
+            return (arg) => {
                 let bool = false;
-                arg.AnnotationList.forEach((item)=>{
-                    if(item==="PathVariable") bool = true;
+                arg.AnnotationList.forEach((item) => {
+                    if (item === "PathVariable") bool = true;
 
                 })
                 return bool;
             }
         },
-        getArgLength(state){
+        getArgLength(state) {
             return state.ArgLength;
         },
-        isSelected(state){
-            return state.Selected;
+        isArgSelected(state) {
+            return state.ArgSelected;
         },
+        isModelSelected(state) {
+            return state.modelSelected;
+        },
+        getModelFields(state){
+            return state.curSelectModel.fieldList;
+        }
     },
     actions: {
-        getMethod(index){
+        getMethod(index) {
             let method = this.methods[index];
             let isReqBody = false;
             let isResFul = false;
@@ -71,12 +94,12 @@ export const MainStore = defineStore('store', {
             let argList = method.parameterList;
             this.ArgLength = argList.length;
             for (let i = 0; i < argList.length; i++) {
-                for (let j = 0; j <argList[i].AnnotationList.length ; j++) {
+                for (let j = 0; j < argList[i].AnnotationList.length; j++) {
                     //isReqBody
-                    if(argList[i].AnnotationList[j]==="RequestBody"){
+                    if (argList[i].AnnotationList[j] === "RequestBody") {
                         isReqBody = true;
                         //isRestFul
-                    }else if(argList[i].AnnotationList[j]==="PathVariable") isResFul = true;
+                    } else if (argList[i].AnnotationList[j] === "PathVariable") isResFul = true;
                 }
             }
             this.parameterList = argList;
@@ -88,11 +111,11 @@ export const MainStore = defineStore('store', {
             console.log(this.Argument_normal)
             return method;
         },
-        handelChangeArg(newV,oldV){
+        handelChangeArg(newV, oldV) {
             this.ArgLength_body = newV
             if (newV > oldV) {
                 for (let i = 0; i < newV - oldV; i++) {
-                    this.Argument_body.push(Object.assign({},ArgObj));
+                    this.Argument_body.push(Object.assign({}, ArgObj));
                 }
             } else {
                 for (let i = 0; i < oldV - newV; i++) {
@@ -100,18 +123,15 @@ export const MainStore = defineStore('store', {
                 }
             }
         },
-        pushResult(obj){
-            this.Result.push(Object.assign({},obj))
+        pushResult(obj) {
+            this.Result.push(Object.assign({}, obj))
             return null;
         },
-        changeSelected(bool){
-            this.Selected = bool;
-        },
-        ChangeType_body(val,index){
-            if(val==='Object'){
+        ChangeType_body(val, index) {
+            if (val === 'Object') {
                 this.Argument_body[index].isObject = true;
                 this.Argument_body[index].isArray = false;
-            }else if(val==='Array') {
+            } else if (val === 'Array') {
                 this.Argument_body[index].isArray = true;
                 this.Argument_body[index].isObject = false;
             } else {
@@ -119,11 +139,11 @@ export const MainStore = defineStore('store', {
                 this.Argument_body[index].isArray = false;
             }
         },
-        ChangeType_normal(val,index){
-            if(val==='Object'){
+        ChangeType_normal(val, index) {
+            if (val === 'Object') {
                 this.Argument_normal[index].isObject = true;
                 this.Argument_normal[index].isArray = false;
-            }else if(val==='Array') {
+            } else if (val === 'Array') {
                 this.Argument_normal[index].isArray = true;
                 this.Argument_normal[index].isObject = false;
             } else {
@@ -131,28 +151,63 @@ export const MainStore = defineStore('store', {
                 this.Argument_normal[index].isArray = false;
             }
         },
-        getArgumentWithOutBodyOrServlet(){
-            let res = this.parameterList.filter(item =>{
+        getArgumentWithOutBodyOrServlet() {
+            let res = this.parameterList.filter(item => {
                 {
-                    if(item===undefined) return false;
+                    if (item === undefined) return false;
                     let bool = true;
                     for (let i = 0; i < item.AnnotationList.length; i++) {
-                        if(item.AnnotationList[i]==="RequestBody") bool = false;
+                        if (item.AnnotationList[i] === "RequestBody") bool = false;
                     }
-                    if(item.Type.includes("Servlet")) bool = false;
+                    if (item.Type.includes("Servlet")) bool = false;
                     return bool;
                 }
             })
             console.log(res)
             return res;
         },
-        isRestFulArgument(arg){
+        isRestFulArgument(arg) {
             let bool = false;
-            if(!this.RestFul) return false;
-            arg.AnnotationList.forEach((item)=>{
-                if(item==="PathVariable") bool = true;
+            if (!this.RestFul) return false;
+            arg.AnnotationList.forEach((item) => {
+                if (item === "PathVariable") bool = true;
             })
             return bool;
         },
+        InitLoad(methods, models) {
+            this.methods = methods;
+            this.models = models;
+            this.models.forEach((item)=>{
+                this.models_refList.push(item.name)
+            })
+            this.models_refList.push('String')
+            this.models_refList.push('Number(String)')
+        },
+        selectMod(index) {
+            this.modelSelected = true;
+            this.ArgSelected = false;
+            this.curSelectModel = this.models[index]
+            this.FieldList = ref(Array(this.curSelectModel.fieldList.length).fill({}).map(() => Object.assign({}, fieldTemplate)));
+        },
+        selectMethod(index){
+            this.modelSelected = false;
+            this.ArgSelected = true;
+            this.curSelectMethod = this.getMethod(index)
+        },
+        pushResultModel(model){
+          this.Result_models.push(model);
+        },
+        changeType_model(val, index){
+            if (val === 'Object') {
+                this.FieldList[index].isObject = true;
+                this.FieldList[index].isArray = false;
+            } else if (val === 'Array') {
+                this.FieldList[index].isObject = false;
+                this.FieldList[index].isArray = true;
+            } else {
+                this.FieldList[index].isObject = false;
+                this.FieldList[index].isArray = false;
+            }
+        }
     }
 })

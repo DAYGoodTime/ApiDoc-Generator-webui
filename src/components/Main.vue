@@ -50,9 +50,8 @@
       />
     </el-descriptions-item>
   </el-descriptions>
-  <el-divider/>
-  <argument v-if="store.isSelected"/>
-
+  <argument v-if="store.isArgSelected"/>
+  <Model v-if="store.isModelSelected"/>
 
 </template>
 <script setup>
@@ -60,6 +59,7 @@ import {MainStore} from "../utils/Store.js";
 import Argument from "./Argument.vue";
 import {computed, onMounted, ref} from "vue";
 import {Document, Postcard} from "@element-plus/icons-vue";
+import Model from "./Model.vue";
 
 const store = MainStore()
 const size = ref('default')

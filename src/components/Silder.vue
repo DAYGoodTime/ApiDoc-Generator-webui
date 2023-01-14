@@ -8,34 +8,42 @@
   >
     <el-sub-menu index="1">
       <template #title>
-        <el-icon><location/></el-icon>
+        <el-icon>
+          <location/>
+        </el-icon>
         <span>接口列表</span>
       </template>
       <el-menu-item-group title="接口名字">
-         <template v-for="(method,index) in store.getMethods" :key="method.methodName">
-           <el-sub-menu :index="'1-'+index">
-             <template #title>{{method.methodName}}</template>
-             <el-menu-item :index="'1-'+index+'1'" @click="selectArg(index)">接口参数</el-menu-item>
-           </el-sub-menu>
-         </template>
+        <template v-for="(method,index) in store.getMethods" :key="method.methodName">
+          <el-sub-menu :index="'1-'+index">
+            <template #title>{{ method.methodName }}</template>
+            <el-menu-item :index="'1-'+index+'1'" @click="store.selectMethod(index)">接口参数</el-menu-item>
+          </el-sub-menu>
+        </template>
+      </el-menu-item-group>
+    </el-sub-menu>
+    <el-sub-menu index="2">
+      <template #title>
+        <el-icon>
+          <icon-menu/>
+        </el-icon>
+        <span>模型列表</span>
+      </template>
+      <el-menu-item-group v-for="(model,index) in store.models" :key="index">
+        <el-menu-item :index="'2-'+index" @click="store.selectMod(index)" >{{model.name}}</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
   </el-menu>
 </template>
 
 <script setup>
-import {Location} from '@element-plus/icons-vue'
-import { MainStore } from '../utils/Store'
-
+import {
+  Location,
+  Menu as IconMenu
+} from '@element-plus/icons-vue'
+import {MainStore} from '../utils/Store'
 
 const store = MainStore()
-const selectArg = (index)=>{
-  store.changeSelected(false)
-  store.$patch({
-    curSelectMethod:store.getMethod(index),
-  })
-  store.changeSelected(true)
-}
 
 
 

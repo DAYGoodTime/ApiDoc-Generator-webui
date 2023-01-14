@@ -1,4 +1,5 @@
 <template>
+  <el-divider/>
   <el-space direction="vertical" size="default">
     <div v-if="store.RequestBody">
       <div v-for="(item,index) in store.ArgLength_body">
@@ -101,10 +102,10 @@
                 ModelVo类型
               </div>
             </template>
-            <el-select v-model="store.Argument_body[index].elementName" class="m-2" placeholder="结构类型" size="small">
-              <el-option label="String" value="String"/>
-              <el-option label="Object" value="Object"/>
-              <el-option label="Array" value="Array"/>
+            <el-select v-model="store.Argument_body[index].elementName"
+                       class="m-2" placeholder="结构类型" size="small">
+              <el-option v-for="item in store.models_refList" :key="item"
+                  :label="item" :value="item+'.class'"/>
             </el-select>
           </el-descriptions-item>
           <el-descriptions-item v-if="store.Argument_body[index].isArray">
@@ -116,10 +117,10 @@
                 元素类型
               </div>
             </template>
-            <el-select v-model="store.Argument_body[index].subType" class="m-2" placeholder="结构类型" size="small">
-              <el-option label="String" value="String"/>
-              <el-option label="Object" value="Object"/>
-              <el-option label="Array" value="Array"/>
+            <el-select v-model="store.Argument_body[index].subType"
+                       class="m-2" placeholder="结构类型" size="small">
+              <el-option v-for="item in store.models_refList" :key="item"
+                  :label="item" :value="item+'.class'"/>
             </el-select>
           </el-descriptions-item>
         </el-descriptions>
@@ -230,10 +231,11 @@
               ModelVo类型
             </div>
           </template>
-          <el-select v-model="store.Argument_normal[index].elementName" class="m-2" placeholder="结构类型" size="small">
-            <el-option label="String" value="String"/>
-            <el-option label="Object" value="Object"/>
-            <el-option label="Array" value="Array"/>
+          <el-select v-model="store.Argument_normal[index].elementName"
+                     class="m-2" placeholder="结构类型" size="small">
+            <el-option
+                v-for="item in store.models_refList" :key="item"
+                :label="item" :value="item+'.class'"/>
           </el-select>
         </el-descriptions-item>
         <el-descriptions-item v-if="store.Argument_normal[index].isArray">
@@ -245,10 +247,10 @@
               元素类型
             </div>
           </template>
-          <el-select v-model="store.Argument_normal[index].subType" class="m-2" placeholder="结构类型" size="small">
-            <el-option label="String" value="String"/>
-            <el-option label="Object" value="Object"/>
-            <el-option label="Array" value="Array"/>
+          <el-select v-model="store.Argument_normal[index].subType"
+                     class="m-2" placeholder="结构类型" size="small">
+            <el-option  v-for="item in store.models_refList" :key="item"
+                :label="item" :value="item+'.class'"/>
           </el-select>
         </el-descriptions-item>
       </el-descriptions>
