@@ -136,7 +136,7 @@
       >
         <template #title>
           <span>{{ arg.parameterName }}
-                <el-tag v-if="store.isRestFulArgument(arg)"
+                <el-tag v-if="store.isRestFulArgument(arg,index)"
                         type="success"
 
                         class="mx-1"
@@ -276,13 +276,13 @@ import {Document, Postcard, Reading, Warning} from '@element-plus/icons-vue'
 import {computed, ref} from "vue";
 import {MainStore} from "../utils/Store.js";
 import {ElMessage} from "element-plus";
-import index from "vuex";
 
 const store = MainStore()
 const size = ref('default')
 const argNumber = ref(1)
 
 const TemplateResult = {
+  'isRequestBody':false,
   'methodName': '',
   'RequestBody': [],
   'normalArgument': [],
@@ -296,6 +296,7 @@ const saveThisMethod = () => {
   TemplateResult.methodSummary = store.mh_summary
   TemplateResult.methodDescription = store.mh_description
   TemplateResult.normalArgument = store.Argument_normal
+  TemplateResult.isRequestBody = store.RequestBody
   store.pushResult(TemplateResult);
   ElMessage({
     showClose: true,

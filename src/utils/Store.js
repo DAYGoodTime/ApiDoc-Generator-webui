@@ -1,5 +1,6 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 const ArgObj = {
     'name': '',
@@ -8,10 +9,10 @@ const ArgObj = {
     'isRequired': true,
     'dataType': '',
     'elementName': '',
-    'isPath': false,
     'subType': '',
     'isObject': false,
     'isArray': false,
+    'isPath':false,//useless
 }
 const fieldTemplate = {
     'name': '',
@@ -21,6 +22,7 @@ const fieldTemplate = {
     'dataType': '',
     'elementName': '',
     'subType': '',
+    'isPath':false,
     'isObject': false,
     'isArray': false,
 }
@@ -45,9 +47,9 @@ export const MainStore = defineStore('store', {
         ArgSelected: ref(false),
         modelSelected: ref(false),
         models: ref([]),
-        Result_models:ref([]),
-        FieldList:ref([]),
-        models_refList:ref([]),
+        Result_models: ref([]),
+        FieldList: ref([]),
+        models_refList: ref([]),
     }),
     getters: {
         getMethods(state) {
@@ -62,16 +64,6 @@ export const MainStore = defineStore('store', {
         getMethodArgument(state) {
             return state.parameterList;
         },
-        isPathValue() {
-            return (arg) => {
-                let bool = false;
-                arg.AnnotationList.forEach((item) => {
-                    if (item === "PathVariable") bool = true;
-
-                })
-                return bool;
-            }
-        },
         getArgLength(state) {
             return state.ArgLength;
         },
@@ -81,7 +73,7 @@ export const MainStore = defineStore('store', {
         isModelSelected(state) {
             return state.modelSelected;
         },
-        getModelFields(state){
+        getModelFields(state) {
             return state.curSelectModel.fieldList;
         }
     },
@@ -96,10 +88,10 @@ export const MainStore = defineStore('store', {
             for (let i = 0; i < argList.length; i++) {
                 for (let j = 0; j < argList[i].AnnotationList.length; j++) {
                     //isReqBody
-                    if (argList[i].AnnotationList[j] === "RequestBody") {
+                    if (argList[i].AnnotationList[j].includes("RequestBody")) {
                         isReqBody = true;
                         //isRestFul
-                    } else if (argList[i].AnnotationList[j] === "PathVariable") isResFul = true;
+                    } else if (argList[i].AnnotationList[j].includes("PathVariable") ) isResFul = true;
                 }
             }
             this.parameterList = argList;
@@ -157,7 +149,7 @@ export const MainStore = defineStore('store', {
                     if (item === undefined) return false;
                     let bool = true;
                     for (let i = 0; i < item.AnnotationList.length; i++) {
-                        if (item.AnnotationList[i] === "RequestBody") bool = false;
+                        if (item.AnnotationList[i].includes("RequestBody")) bool = false;
                     }
                     if (item.Type.includes("Servlet")) bool = false;
                     return bool;
@@ -166,38 +158,40 @@ export const MainStore = defineStore('store', {
             console.log(res)
             return res;
         },
-        isRestFulArgument(arg) {
+        isRestFulArgument(arg,index) {
             let bool = false;
             if (!this.RestFul) return false;
             arg.AnnotationList.forEach((item) => {
                 if (item === "PathVariable") bool = true;
             })
+            this.Argument_normal[index].isPath = bool;
             return bool;
         },
         InitLoad(methods, models) {
             this.methods = methods;
             this.models = models;
-            this.models.forEach((item)=>{
+            this.models.forEach((item) => {
                 this.models_refList.push(item.name)
             })
             this.models_refList.push('String')
             this.models_refList.push('Number(String)')
         },
         selectMod(index) {
+            this.mainTitle = "模型参数";
             this.modelSelected = true;
             this.ArgSelected = false;
             this.curSelectModel = this.models[index]
             this.FieldList = ref(Array(this.curSelectModel.fieldList.length).fill({}).map(() => Object.assign({}, fieldTemplate)));
         },
-        selectMethod(index){
+        selectMethod(index) {
             this.modelSelected = false;
             this.ArgSelected = true;
             this.curSelectMethod = this.getMethod(index)
         },
-        pushResultModel(model){
-          this.Result_models.push(model);
+        pushResultModel(model) {
+            this.Result_models.push(model);
         },
-        changeType_model(val, index){
+        changeType_model(val, index) {
             if (val === 'Object') {
                 this.FieldList[index].isObject = true;
                 this.FieldList[index].isArray = false;
@@ -208,6 +202,33 @@ export const MainStore = defineStore('store', {
                 this.FieldList[index].isObject = false;
                 this.FieldList[index].isArray = false;
             }
+        },
+        UploadData() {
+            ElMessageBox.confirm(
+                '即将将所有数据上传回IDEA，是否继续',
+                'Warning',
+                {
+                    confirmButtonText: 'OK',
+                    cancelButtonText: 'Cancel',
+                    type: 'warning',
+                }
+            )
+                .then(() => {
+                    let obj = {'methods':this.Result,'models':this.Result_models}
+                    console.log(JSON.stringify(obj))
+                    if(this.WebSocket===undefined) return;
+                    this.WebSocket.send(JSON.stringify(obj))
+                    ElMessage({
+                        type: 'success',
+                        message: '操作成功',
+                    })
+                })
+                .catch(() => {
+                    ElMessage({
+                        type: 'info',
+                        message: '操作取消',
+                    })
+                })
         }
     }
 })

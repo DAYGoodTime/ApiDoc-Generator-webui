@@ -20,6 +20,9 @@
       <el-button @click="addsocket">连接</el-button>
       <el-button type="danger" @click="closeConnect">断开</el-button>
     </el-col>
+    <el-col :span="6" :offset="0">
+      <el-button type="success" @click="store.UploadData" plain>上传数据</el-button>
+    </el-col>
   </el-row>
 </template>
 
@@ -40,12 +43,12 @@ const getAndLoadMethods = (jsonStr) =>{
   });
 }
 const addsocket = () =>{
-  getAndLoadMethods(responseJson)
-  // if(host_ip===''){
-  //   ElMessage.error('请填写WebSocket服务器地址');
-  // }
-  // host.value = "ws://".concat(host_ip.value)
-  // StartWebSocket(host);
+  // getAndLoadMethods(responseJson)
+  if(host_ip===''){
+    ElMessage.error('请填写WebSocket服务器地址');
+  }
+  host.value = "ws://".concat(host_ip.value)
+  StartWebSocket(host);
 }
 const closeConnect = () =>{
     store.WebSocket.close();
