@@ -2,7 +2,7 @@
   <el-divider/>
   <el-space direction="vertical" size="default">
     <div v-if="store.RequestBody">
-      <div v-for="(item,index) in store.ArgLength_body">
+      <div v-for="(item,index) in store.getArgBodyLength(props.index)">
         <el-descriptions
             class="margin-top"
             :column="3"
@@ -14,7 +14,7 @@
             <span>Body请求体变量</span>
           </template>
           <template #extra v-if="index===0">
-            <el-input-number v-model="argNumber" :min="1" @change="handelChange"/>
+            <el-input-number v-model="argNumber" :min="1" @change="(...event) =>{handelChange(event, index)}"/>
           </template>
           <el-descriptions-item>
             <template #label>
@@ -26,7 +26,7 @@
               </div>
             </template>
             <el-input
-                v-model="store.Argument_body[index].name"
+                v-model="store.Argument_body[props.index][index].name"
                 class="w-50 m-2"
                 placeholder="Type something"
             />
@@ -41,7 +41,7 @@
               </div>
             </template>
             <el-input
-                v-model="store.Argument_body[index].description"
+                v-model="store.Argument_body[props.index][index].description"
                 class="w-50 m-2"
                 placeholder="Type something"
             />
@@ -56,7 +56,7 @@
               </div>
             </template>
             <el-input
-                v-model="store.Argument_body[index].example"
+                v-model="store.Argument_body[props.index][index].example"
                 class="w-50 m-2"
                 placeholder="Type something"
             />
@@ -71,7 +71,7 @@
               </div>
             </template>
             <el-switch
-                v-model="store.Argument_body[index].isRequired"
+                v-model="store.Argument_body[props.index][index].isRequired"
                 class="ml-2"
                 style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
             />
@@ -85,15 +85,15 @@
                 参数类型
               </div>
             </template>
-            <el-select v-model="store.Argument_body[index].dataType" class="m-2" placeholder="参数类型" size="small"
-                       @change="store.ChangeType_body($event,index)"
+            <el-select v-model="store.Argument_body[props.index][index].dataType" class="m-2" placeholder="参数类型" size="small"
+                       @change="store.ChangeType_body($event,props.index,index)"
             >
               <el-option label="String" value="String"/>
               <el-option label="Object" value="Object"/>
               <el-option label="Array" value="Array"/>
             </el-select>
           </el-descriptions-item>
-          <el-descriptions-item v-if="store.Argument_body[index].isObject">
+          <el-descriptions-item v-if="store.Argument_body[props.index][index].isObject">
             <template #label>
               <div class="cell-item">
                 <el-icon :style="iconStyle">
@@ -102,13 +102,13 @@
                 ModelVo类型
               </div>
             </template>
-            <el-select v-model="store.Argument_body[index].elementName"
+            <el-select v-model="store.Argument_body[props.index][index].elementName"
                        class="m-2" placeholder="结构类型" size="small">
               <el-option v-for="item in store.models_refList" :key="item"
                   :label="item" :value="item+'.class'"/>
             </el-select>
           </el-descriptions-item>
-          <el-descriptions-item v-if="store.Argument_body[index].isArray">
+          <el-descriptions-item v-if="store.Argument_body[props.index][index].isArray">
             <template #label>
               <div class="cell-item">
                 <el-icon :style="iconStyle">
@@ -117,7 +117,7 @@
                 元素类型
               </div>
             </template>
-            <el-select v-model="store.Argument_body[index].subType"
+            <el-select v-model="store.Argument_body[props.index][index].subType"
                        class="m-2" placeholder="结构类型" size="small">
               <el-option v-for="item in store.models_refList" :key="item"
                   :label="item" :value="item+'.class'"/>
@@ -136,7 +136,7 @@
       >
         <template #title>
           <span>{{ arg.parameterName }}
-                <el-tag v-if="store.isRestFulArgument(arg,index)"
+                <el-tag v-if="store.isRestFulArgument(arg,props.index,index)"
                         type="success"
 
                         class="mx-1"
@@ -155,7 +155,7 @@
             </div>
           </template>
           <el-input
-              v-model="store.Argument_normal[index].name"
+              v-model="store.Argument_normal[props.index][index].name"
               class="w-50 m-2"
               placeholder="Type something"
           />
@@ -170,7 +170,7 @@
             </div>
           </template>
           <el-input
-              v-model="store.Argument_normal[index].description"
+              v-model="store.Argument_normal[props.index][index].description"
               class="w-50 m-2"
               placeholder="Type something"
           />
@@ -185,7 +185,7 @@
             </div>
           </template>
           <el-input
-              v-model="store.Argument_normal[index].example"
+              v-model="store.Argument_normal[props.index][index].example"
               class="w-50 m-2"
               placeholder="Type something"
           />
@@ -200,7 +200,7 @@
             </div>
           </template>
           <el-switch
-              v-model="store.Argument_normal[index].isRequired"
+              v-model="store.Argument_normal[props.index][index].isRequired"
               class="ml-2"
               style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
           />
@@ -214,15 +214,15 @@
               参数类型
             </div>
           </template>
-          <el-select v-model="store.Argument_normal[index].dataType" class="m-2" placeholder="参数类型" size="small"
-                     @change="store.ChangeType_normal($event,index)"
+          <el-select v-model="store.Argument_normal[props.index][index].dataType" class="m-2" placeholder="参数类型" size="small"
+                     @change="store.ChangeType_normal($event,props.index,index)"
           >
             <el-option label="String" value="String"/>
             <el-option label="Object" value="Object"/>
             <el-option label="Array" value="Array"/>
           </el-select>
         </el-descriptions-item>
-        <el-descriptions-item v-if="store.Argument_normal[index].isObject">
+        <el-descriptions-item v-if="store.Argument_normal[props.index][index].isObject">
           <template #label>
             <div class="cell-item">
               <el-icon :style="iconStyle">
@@ -231,14 +231,14 @@
               ModelVo类型
             </div>
           </template>
-          <el-select v-model="store.Argument_normal[index].elementName"
+          <el-select v-model="store.Argument_normal[props.index][index].elementName"
                      class="m-2" placeholder="结构类型" size="small">
             <el-option
                 v-for="item in store.models_refList" :key="item"
                 :label="item" :value="item+'.class'"/>
           </el-select>
         </el-descriptions-item>
-        <el-descriptions-item v-if="store.Argument_normal[index].isArray">
+        <el-descriptions-item v-if="store.Argument_normal[props.index][index].isArray">
           <template #label>
             <div class="cell-item">
               <el-icon :style="iconStyle">
@@ -247,7 +247,7 @@
               元素类型
             </div>
           </template>
-          <el-select v-model="store.Argument_normal[index].subType"
+          <el-select v-model="store.Argument_normal[props.index][index].subType"
                      class="m-2" placeholder="结构类型" size="small">
             <el-option  v-for="item in store.models_refList" :key="item"
                 :label="item" :value="item+'.class'"/>
@@ -255,19 +255,6 @@
         </el-descriptions-item>
       </el-descriptions>
     </div>
-    <el-popconfirm
-        width="220"
-        confirm-button-text="让我保存！"
-        cancel-button-text="等会哦"
-        :icon="Warning"
-        icon-color="#626AEF"
-        title="数据都填好了吗?"
-        :on-confirm="saveThisMethod"
-    >
-      <template #reference>
-        <el-button type="success" round>保存</el-button>
-      </template>
-    </el-popconfirm>
   </el-space>
 </template>
 
@@ -279,7 +266,8 @@ import {ElMessage} from "element-plus";
 
 const store = MainStore()
 const size = ref('default')
-const argNumber = ref(1)
+const argNumber = 1
+const props = defineProps(['index'])
 
 const TemplateResult = {
   'isRequestBody':false,
@@ -305,10 +293,11 @@ const saveThisMethod = () => {
   })
 }
 
-const handelChange = (currentValue, oldValue) => {
+const handelChange = (evt,index) => {
+  let currentValue = evt[0];
+  let oldValue = evt[1];
   if (isNaN(currentValue)) return;
-  store.handelChangeArg(currentValue, oldValue);
-  argNumber.value = currentValue;
+  store.handelChangeArg(currentValue, oldValue,index);
 }
 const log = (obj) => { //debug use
   console.log(obj)

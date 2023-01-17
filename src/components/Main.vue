@@ -15,7 +15,7 @@
     <template #title>
       <el-space wrap>
         <span>接口信息   </span>
-        <el-check-tag type="success" :checked="store.RequestBody" @change="ReqBodyTagChange">RequestBody</el-check-tag>
+        <el-check-tag type="success" :checked="store.RequestBody[store.getCurSelectIndex]" @change="ReqBodyTagChange">RequestBody</el-check-tag>
         <el-check-tag type="success" :checked="store.RestFul" @change="RestFulTagChange">RestFul风格</el-check-tag>
       </el-space>
     </template>
@@ -29,7 +29,7 @@
         </div>
       </template>
       <el-input
-          v-model="store.mh_summary"
+          v-model="store.mh_summary[store.getCurSelectIndex]"
           class="w-50 m-2"
           placeholder="Type something"
       />
@@ -44,15 +44,15 @@
         </div>
       </template>
       <el-input
-          v-model="store.mh_description"
+          v-model="store.mh_description[store.getCurSelectIndex]"
           class="w-50 m-2"
           placeholder="Type something"
       />
     </el-descriptions-item>
   </el-descriptions>
-  <argument v-if="store.isArgSelected"/>
-  <Model v-if="store.isModelSelected"/>
-
+  <argument v-if="store.isArgSelected" :index="store.getCurSelectIndex"/>
+  <Model v-if="store.isModelSelected"  :index="store.getCurSelectIndex_model"/>
+  <Response v-if="store.isRespSelected" :index="store.getCurSelectIndex"/>
 </template>
 <script setup>
 import {MainStore} from "../utils/Store.js";
@@ -60,6 +60,7 @@ import Argument from "./Argument.vue";
 import {computed, onMounted, ref} from "vue";
 import {Document, Postcard} from "@element-plus/icons-vue";
 import Model from "./Model.vue";
+import Response from "./Response.vue";
 
 const store = MainStore()
 const size = ref('default')

@@ -12,44 +12,32 @@ const ArgObj = {
     'subType': '',
     'isObject': false,
     'isArray': false,
-    'isPath':false,//useless
-}
-const fieldTemplate = {
-    'name': '',
-    'description': '',
-    'isRequired': true,
-    'example': '',
-    'dataType': '',
-    'elementName': '',
-    'subType': '',
-    'isPath':false,
-    'isObject': false,
-    'isArray': false,
+    'isPath': false,
 }
 export const MainStore = defineStore('store', {
     state: () => ({
+        CurSelectIndex: ref(0),
+        CurSelectIndex_model: ref(0),
         methods: ref([]),
         WebSocket: undefined,
         parameterList: ref([]),
         curSelectMethod: ref({}),
         curSelectModel: ref({}),
         mainTitle: '等待选择',
-        RequestBody: ref(),
+        RequestBody: ref([]),
         RestFul: ref(),
-        ArgLength: ref(1),//普通参数的长度
-        ArgLength_body: ref(1),//请求体参数的长度
-        Argument_body: ref(Array(1).fill({}).map(() => Object.assign({}, ArgObj))),
+        Argument_body: ref([]),
         Argument_normal: ref([]),
-        mh_summary: ref(''),
-        mh_description: ref(''),
-        Result: ref([]),
-        SchemaList: ref([]),
+        methodNames:ref([]),
+        mh_summary: ref([]),
+        mh_description: ref([]),
         ArgSelected: ref(false),
         modelSelected: ref(false),
+        RespSelected: ref(false),
         models: ref([]),
-        Result_models: ref([]),
         FieldList: ref([]),
         models_refList: ref([]),
+        Response:ref([]),
     }),
     getters: {
         getMethods(state) {
@@ -64,54 +52,48 @@ export const MainStore = defineStore('store', {
         getMethodArgument(state) {
             return state.parameterList;
         },
-        getArgLength(state) {
-            return state.ArgLength;
-        },
         isArgSelected(state) {
             return state.ArgSelected;
         },
         isModelSelected(state) {
             return state.modelSelected;
         },
+        isRespSelected(state) {
+            return state.RespSelected;
+        },
         getModelFields(state) {
             return state.curSelectModel.fieldList;
-        }
+        },
+        getMethodsLength(state) {
+            return state.methods.length;
+        },
+        getCurSelectIndex(state) {
+            return state.CurSelectIndex;
+        },
+        getCurSelectIndex_model(state) {
+            return state.CurSelectIndex_model;
+        },
     },
     actions: {
-        getMethod(index) {
-            let method = this.methods[index];
-            let isReqBody = false;
-            let isResFul = false;
-            //LoadArgumentList
-            let argList = method.parameterList;
-            this.ArgLength = argList.length;
-            for (let i = 0; i < argList.length; i++) {
-                for (let j = 0; j < argList[i].AnnotationList.length; j++) {
-                    //isReqBody
-                    if (argList[i].AnnotationList[j].includes("RequestBody")) {
-                        isReqBody = true;
-                        //isRestFul
-                    } else if (argList[i].AnnotationList[j].includes("PathVariable") ) isResFul = true;
-                }
-            }
-            this.parameterList = argList;
-            this.mainTitle = "接口参数";
-            this.RequestBody = isReqBody;
-            this.RestFul = isResFul;
-            //Init ArgumentList
-            this.Argument_normal = Array(argList.length).fill({}).map(() => Object.assign({}, ArgObj))
-            console.log(this.Argument_normal)
-            return method;
-        },
-        handelChangeArg(newV, oldV) {
-            this.ArgLength_body = newV
+        handelChangeArg(newV, oldV, index) {
             if (newV > oldV) {
                 for (let i = 0; i < newV - oldV; i++) {
-                    this.Argument_body.push(Object.assign({}, ArgObj));
+                    this.Argument_body[index].push(Object.assign({}, ArgObj));
                 }
             } else {
                 for (let i = 0; i < oldV - newV; i++) {
-                    this.Argument_body.pop();
+                    this.Argument_body[index].pop();
+                }
+            }
+        },
+        handelChangeResp(newV, oldV, index) {
+            if (newV > oldV) {
+                for (let i = 0; i < newV - oldV; i++) {
+                    this.Response[index].push(Object.assign({}, ArgObj));
+                }
+            } else {
+                for (let i = 0; i < oldV - newV; i++) {
+                    this.Response[index].pop();
                 }
             }
         },
@@ -119,28 +101,40 @@ export const MainStore = defineStore('store', {
             this.Result.push(Object.assign({}, obj))
             return null;
         },
-        ChangeType_body(val, index) {
+        ChangeType_body(val, pIndex, index) {
             if (val === 'Object') {
-                this.Argument_body[index].isObject = true;
-                this.Argument_body[index].isArray = false;
+                this.Argument_body[pIndex][index].isObject = true;
+                this.Argument_body[pIndex][index].isArray = false;
             } else if (val === 'Array') {
-                this.Argument_body[index].isArray = true;
-                this.Argument_body[index].isObject = false;
+                this.Argument_body[pIndex][index].isArray = true;
+                this.Argument_body[pIndex][index].isObject = false;
             } else {
-                this.Argument_body[index].isObject = false;
-                this.Argument_body[index].isArray = false;
+                this.Argument_body[pIndex][index].isObject = false;
+                this.Argument_body[pIndex][index].isArray = false;
             }
         },
-        ChangeType_normal(val, index) {
+        ChangeType_normal(val, pIndex, index) {
             if (val === 'Object') {
-                this.Argument_normal[index].isObject = true;
-                this.Argument_normal[index].isArray = false;
+                this.Argument_normal[pIndex][index].isObject = true;
+                this.Argument_normal[pIndex][index].isArray = false;
             } else if (val === 'Array') {
-                this.Argument_normal[index].isArray = true;
-                this.Argument_normal[index].isObject = false;
+                this.Argument_normal[pIndex][index].isArray = true;
+                this.Argument_normal[pIndex][index].isObject = false;
             } else {
-                this.Argument_normal[index].isObject = false;
-                this.Argument_normal[index].isArray = false;
+                this.Argument_normal[pIndex][index].isObject = false;
+                this.Argument_normal[pIndex][index].isArray = false;
+            }
+        },
+        ChangeType_resp(val, pIndex, index) {
+            if (val === 'Object') {
+                this.Response[pIndex][index].isObject = true;
+                this.Response[pIndex][index].isArray = false;
+            } else if (val === 'Array') {
+                this.Response[pIndex][index].isArray = true;
+                this.Response[pIndex][index].isObject = false;
+            } else {
+                this.Response[pIndex][index].isObject = false;
+                this.Response[pIndex][index].isArray = false;
             }
         },
         getArgumentWithOutBodyOrServlet() {
@@ -155,16 +149,15 @@ export const MainStore = defineStore('store', {
                     return bool;
                 }
             })
-            console.log(res)
             return res;
         },
-        isRestFulArgument(arg,index) {
+        isRestFulArgument(arg, pIndex, index) {
             let bool = false;
             if (!this.RestFul) return false;
             arg.AnnotationList.forEach((item) => {
-                if (item === "PathVariable") bool = true;
+                if (item.includes("PathVariable")) bool = true;
             })
-            this.Argument_normal[index].isPath = bool;
+            this.Argument_normal[pIndex][index].isPath = bool;
             return bool;
         },
         InitLoad(methods, models) {
@@ -173,34 +166,77 @@ export const MainStore = defineStore('store', {
             this.models.forEach((item) => {
                 this.models_refList.push(item.name)
             })
+            this.Argument_body = ref(Array(methods.length))
+            this.Argument_normal = ref(Array(methods.length))
+            this.FieldList=ref(Array(models.length))
+            this.Response = ref(Array(methods.length))
+            for (let i = 0; i < methods.length; i++) {
+                this.methodNames.push(methods[i].methodName);
+                this.Response[i] = Array(1).fill({}).map(() => Object.assign({}, ArgObj))
+                this.Argument_body[i] = Array(1).fill({}).map(() => Object.assign({}, ArgObj))
+                //normal
+                let count = 0;
+                methods[i].parameterList.forEach((item) => {
+                    let bool = true;
+                    item.AnnotationList.forEach((ann) => {
+                        if (ann.includes("Servlet") || ann.includes("RequestBody")) bool = false;
+                    })
+                    if (bool) count++;
+                })
+                this.Argument_normal[i] = Array(count).fill({}).map(() => Object.assign({}, ArgObj))
+            }
+            for (let i = 0; i < models.length; i++) {
+                this.FieldList[i] = Array(this.models[i].fieldList.length).fill({}).map(() => Object.assign({}, ArgObj))
+            }
             this.models_refList.push('String')
             this.models_refList.push('Number(String)')
         },
         selectMod(index) {
+            this.CurSelectIndex_model = index;
             this.mainTitle = "模型参数";
             this.modelSelected = true;
             this.ArgSelected = false;
+            this.RespSelected = false;
             this.curSelectModel = this.models[index]
-            this.FieldList = ref(Array(this.curSelectModel.fieldList.length).fill({}).map(() => Object.assign({}, fieldTemplate)));
         },
         selectMethod(index) {
+            this.CurSelectIndex = index;
             this.modelSelected = false;
             this.ArgSelected = true;
-            this.curSelectMethod = this.getMethod(index)
+            this.RespSelected = false;
+            this.curSelectMethod = this.methods[index];
+            this.parameterList = this.curSelectMethod.parameterList;
+            let isReqBody = false;
+            let isResFul = false;
+            for (let i = 0; i < this.parameterList.length; i++) {
+                for (let j = 0; j < this.parameterList[i].AnnotationList.length; j++) {
+                    //isReqBody
+                    if (this.parameterList[i].AnnotationList[j].includes("RequestBody")) {
+                        isReqBody = true;
+                        //isRestFul
+                    } else if (this.parameterList[i].AnnotationList[j].includes("PathVariable")) isResFul = true;
+                }
+            }
+            this.RequestBody[index] = isReqBody;
+            this.RestFul = isResFul;
+            this.mainTitle = "接口参数";
         },
-        pushResultModel(model) {
-            this.Result_models.push(model);
+        selectMethodResp(index){
+            this.CurSelectIndex = index;
+            this.modelSelected = false;
+            this.ArgSelected = false;
+            this.RespSelected = true;
         },
-        changeType_model(val, index) {
+        changeType_model(val,pIndex ,index) {
             if (val === 'Object') {
-                this.FieldList[index].isObject = true;
-                this.FieldList[index].isArray = false;
+                this.FieldList[pIndex][index].isObject = true;
+                this.FieldList[pIndex][index].isArray = false;
             } else if (val === 'Array') {
-                this.FieldList[index].isObject = false;
-                this.FieldList[index].isArray = true;
+                this.FieldList[pIndex][index].isObject = false;
+                this.FieldList[pIndex][index].isArray = true;
             } else {
-                this.FieldList[index].isObject = false;
-                this.FieldList[index].isArray = false;
+                this.FieldList[pIndex][index].isObject = false;
+                this.FieldList[pIndex][index].isArray = false;
             }
         },
         UploadData() {
@@ -214,9 +250,22 @@ export const MainStore = defineStore('store', {
                 }
             )
                 .then(() => {
-                    let obj = {'methods':this.Result,'models':this.Result_models}
+                    let methods = [];
+                    let modelList = [];
+                    this.methodNames.forEeach((item,index)=>{
+                        let method = {'methodName':item,'requestBody':this.Argument_body[index],'normalArgument':this.Argument_normal[index],
+                            'isRequestBody':this.RequestBody[index],'methodSummary':this.mh_summary[index],'methodDescription':this.mh_description[index],
+                            'Response':this.Response
+                        }
+                        methods.push(method)
+                    });
+                    this.models.forEach((item,index)=>{
+                        let obj = {'modelName':item.name,'fieldList':this.FieldList[index]}
+                        modelList.push(obj);
+                    })
+                    let obj = {'methods': methods, 'models':modelList}
                     console.log(JSON.stringify(obj))
-                    if(this.WebSocket===undefined) return;
+                    if (this.WebSocket === undefined) return;
                     this.WebSocket.send(JSON.stringify(obj))
                     ElMessage({
                         type: 'success',
@@ -229,6 +278,18 @@ export const MainStore = defineStore('store', {
                         message: '操作取消',
                     })
                 })
-        }
+        },
+        debug() {
+            console.log(this.Argument_body)
+            console.log(this.Argument_normal)
+            console.log(this.FieldList)
+            console.log(this.Response)
+        },
+        getArgBodyLength(index) {
+            return this.Argument_body[index].length;
+        },
+        getRespLength(index) {
+            return this.Response[index].length;
+        },
     }
 })

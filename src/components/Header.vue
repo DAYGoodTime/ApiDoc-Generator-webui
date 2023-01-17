@@ -23,6 +23,9 @@
     <el-col :span="6" :offset="0">
       <el-button type="success" @click="store.UploadData" plain>上传数据</el-button>
     </el-col>
+    <el-col :span="4" :offset="0">
+      <el-button type="success" @click="store.debug()" plain>debug</el-button>
+    </el-col>
   </el-row>
 </template>
 
@@ -30,8 +33,10 @@
 import {ref} from "vue";
 import {ElMessage} from "element-plus";
 import {MainStore} from "../utils/Store.js";
+import {ArgStore} from "../utils/ArgStore.js";
 
 const store = MainStore()
+const argStore = ArgStore()
 const host_ip = ref("localhost:9984");
 const host = ref("")
 const getAndLoadMethods = (jsonStr) =>{
@@ -43,12 +48,12 @@ const getAndLoadMethods = (jsonStr) =>{
   });
 }
 const addsocket = () =>{
-  // getAndLoadMethods(responseJson)
-  if(host_ip===''){
-    ElMessage.error('请填写WebSocket服务器地址');
-  }
-  host.value = "ws://".concat(host_ip.value)
-  StartWebSocket(host);
+  getAndLoadMethods(responseJson)
+  // if(host_ip===''){
+  //   ElMessage.error('请填写WebSocket服务器地址');
+  // }
+  // host.value = "ws://".concat(host_ip.value)
+  // StartWebSocket(host);
 }
 const closeConnect = () =>{
     store.WebSocket.close();

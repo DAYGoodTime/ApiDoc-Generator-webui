@@ -18,6 +18,7 @@
           <el-sub-menu :index="'1-'+index">
             <template #title>{{ method.methodName }}</template>
             <el-menu-item :index="'1-'+index+'1'" @click="store.selectMethod(index)">接口参数</el-menu-item>
+            <el-menu-item :index="'1-'+index+'2'" @click="store.selectMethodResp(index)">返回参数</el-menu-item>
           </el-sub-menu>
         </template>
       </el-menu-item-group>
@@ -30,7 +31,7 @@
         <span>模型列表</span>
       </template>
       <el-menu-item-group v-for="(model,index) in store.models" :key="index">
-        <el-menu-item :index="'2-'+index" @click="store.selectMod(index)" >{{model.name}}</el-menu-item>
+        <el-menu-item :index="'2-'+index" @click="store.selectMod(index)" ><template #title>{{ model.name }}</template></el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
   </el-menu>
@@ -42,8 +43,10 @@ import {
   Menu as IconMenu
 } from '@element-plus/icons-vue'
 import {MainStore} from '../utils/Store'
+import {ArgStore} from "../utils/ArgStore.js";
 
 const store = MainStore()
+const argStore = ArgStore()
 
 
 
