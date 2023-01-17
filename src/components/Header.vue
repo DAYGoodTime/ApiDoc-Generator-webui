@@ -48,12 +48,12 @@ const getAndLoadMethods = (jsonStr) =>{
   });
 }
 const addsocket = () =>{
-  getAndLoadMethods(responseJson)
-  // if(host_ip===''){
-  //   ElMessage.error('请填写WebSocket服务器地址');
-  // }
-  // host.value = "ws://".concat(host_ip.value)
-  // StartWebSocket(host);
+  // getAndLoadMethods(responseJson)
+  if(host_ip===''){
+    ElMessage.error('请填写WebSocket服务器地址');
+  }
+  host.value = "ws://".concat(host_ip.value)
+  StartWebSocket(host);
 }
 const closeConnect = () =>{
     store.WebSocket.close();
@@ -116,7 +116,7 @@ const responseJson =`
     "modifier": "@Operation(summary = \\"查看帖子详情\\",\\n            description = \\"查看帖子详情\\",\\n            responses = {\\n                    @ApiResponse(responseCode = \\"200\\",description = \\"操作成功,并返回数据\\",\\n                            content = @Content(mediaType = \\"application/json\\",schema = @Schema(implementation = getPostResp.class))),\\n                    @ApiResponse(responseCode = \\"100\\",description = \\"操作失败\\",\\n                            content = @Content(mediaType = \\"application/json\\",schema = @Schema(implementation = R_Fail.class)))\\n            }\\n    )\\n    @GetMapping(path = \\"/getPost/{pid}\\")\\n    public",
     "parameterList": [{
       "parameterName": "post_id",
-      "AnnotationList": ["Parameter", "PathVariable"],
+      "AnnotationList": ["Parameter", "PathVariable","RequestBody"],
       "Type": "String"
     }, {
       "parameterName": "user_id",

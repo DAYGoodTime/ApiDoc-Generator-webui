@@ -28,6 +28,7 @@ export const MainStore = defineStore('store', {
         RestFul: ref(),
         Argument_body: ref([]),
         Argument_normal: ref([]),
+        Argument_bodyLength: ref([]),
         methodNames:ref([]),
         mh_summary: ref([]),
         mh_description: ref([]),
@@ -38,6 +39,7 @@ export const MainStore = defineStore('store', {
         FieldList: ref([]),
         models_refList: ref([]),
         Response:ref([]),
+        Response_length:ref([]),
     }),
     getters: {
         getMethods(state) {
@@ -85,6 +87,7 @@ export const MainStore = defineStore('store', {
                     this.Argument_body[index].pop();
                 }
             }
+            this.Argument_bodyLength[index] = newV;
         },
         handelChangeResp(newV, oldV, index) {
             if (newV > oldV) {
@@ -96,6 +99,7 @@ export const MainStore = defineStore('store', {
                     this.Response[index].pop();
                 }
             }
+            this.Response_length[index] = newV;
         },
         pushResult(obj) {
             this.Result.push(Object.assign({}, obj))
@@ -168,6 +172,8 @@ export const MainStore = defineStore('store', {
             })
             this.Argument_body = ref(Array(methods.length))
             this.Argument_normal = ref(Array(methods.length))
+            this.Response_length = ref(Array(methods.length).fill(1))
+            this.Argument_bodyLength = ref(Array(methods.length).fill(1))
             this.FieldList=ref(Array(models.length))
             this.Response = ref(Array(methods.length))
             for (let i = 0; i < methods.length; i++) {
@@ -252,17 +258,17 @@ export const MainStore = defineStore('store', {
                 .then(() => {
                     let methods = [];
                     let modelList = [];
-                    this.methodNames.forEeach((item,index)=>{
-                        let method = {'methodName':item,'requestBody':this.Argument_body[index],'normalArgument':this.Argument_normal[index],
-                            'isRequestBody':this.RequestBody[index],'methodSummary':this.mh_summary[index],'methodDescription':this.mh_description[index],
+                    for (let i = 0; i < this.methodNames.length; i++) {
+                        let method = {'methodName':this.methodNames[i],'requestBody':this.Argument_body[i],'normalArgument':this.Argument_normal[i],
+                            'isRequestBody':this.RequestBody[i],'methodSummary':this.mh_summary[i],'methodDescription':this.mh_description[i],
                             'Response':this.Response
                         }
                         methods.push(method)
-                    });
-                    this.models.forEach((item,index)=>{
-                        let obj = {'modelName':item.name,'fieldList':this.FieldList[index]}
+                    }
+                    for (let i = 0; i < this.models.length; i++) {
+                        let obj = {'modelName':this.models[i].name,'fieldList':this.FieldList[i]}
                         modelList.push(obj);
-                    })
+                    }
                     let obj = {'methods': methods, 'models':modelList}
                     console.log(JSON.stringify(obj))
                     if (this.WebSocket === undefined) return;
@@ -284,12 +290,6 @@ export const MainStore = defineStore('store', {
             console.log(this.Argument_normal)
             console.log(this.FieldList)
             console.log(this.Response)
-        },
-        getArgBodyLength(index) {
-            return this.Argument_body[index].length;
-        },
-        getRespLength(index) {
-            return this.Response[index].length;
         },
     }
 })

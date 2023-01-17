@@ -1,8 +1,8 @@
 <template>
   <el-divider/>
   <el-space direction="vertical" size="default">
-    <div v-if="store.RequestBody">
-      <div v-for="(item,index) in store.getArgBodyLength(props.index)">
+    <div v-if="store.RequestBody[props.index]">
+      <div v-for="(item,index) in store.Argument_bodyLength[props.index]">
         <el-descriptions
             class="margin-top"
             :column="3"
@@ -14,7 +14,7 @@
             <span>Body请求体变量</span>
           </template>
           <template #extra v-if="index===0">
-            <el-input-number v-model="argNumber" :min="1" @change="(...event) =>{handelChange(event, index)}"/>
+            <el-input-number v-model="store.Argument_bodyLength[props.index]" :min="1" @change="(...event) =>{handelChange(event, props.index)}"/>
           </template>
           <el-descriptions-item>
             <template #label>
